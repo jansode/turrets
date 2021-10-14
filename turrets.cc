@@ -49,13 +49,39 @@ void Turrets::ClearPreview()
 
     if(attacked_square.x != -1)
     {
-        grid[attacked_square.y][attacked_square.x] = side_to_move;
+        grid[attacked_square.y][attacked_square.x] = GetOpponent(side_to_move);
     }
 
     previewed_cells.clear();
     preview_active = false;
     attacked_square = {-1,-1};
     launch_square = {-1,-1};
+}
+
+void Turrets::CalculateScore()
+{
+    occupied_white = 0;
+    occupied_black = 0;
+
+    for(int y = 0; y < kGridHeight; ++y)
+    {
+        for(int x = 0; x < kGridWidth; ++x)
+        {
+            switch(grid[y][x])
+            {
+                case WHITE: occupied_white++; break;
+                case BLACK: occupied_black++; break;
+                default: break;
+            }
+        }
+    }
+}
+
+void Turrets::DisplayScore()
+{
+    std::cout<<"==Score==\n";
+    std::cout<<"White: "<<occupied_white<<"\n";
+    std::cout<<"Black: "<<occupied_black<<"\n\n";
 }
 
 void Turrets::ChangeSide()
@@ -67,6 +93,8 @@ void Turrets::ChangeSide()
 
     if(preview_active) 
         ClearPreview();
+
+    DisplayScore();
 }
 
 void Turrets::PlayMove(int mouse_x, int mouse_y)
@@ -76,6 +104,12 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
 
     if(preview_active)
     {
+        if(launch_square.x == x && launch_square.y == y)
+        {
+            ClearPreview();
+            return;
+        }
+
         int opponent = GetOpponent(side_to_move);
 
         Point search_point = {x,y};
@@ -88,9 +122,6 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
 
             while(!queue.empty())
             {
-
-                std::cout<<"x:"<<queue.front().x<<" y:"<<queue.front().y<<std::endl;
-
                 Point current = queue.front();
                 queue.pop();
 
@@ -103,19 +134,19 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
                     new_point.y = current.y-1;
                     queue.push(new_point);
                 }
-                else if(current.y < kGridHeight-1 && grid[current.y+1][current.x] == opponent)    
+                if(current.y < kGridHeight-1 && grid[current.y+1][current.x] == opponent)    
                 {
                     new_point.x = current.x;
                     new_point.y = current.y+1;
                     queue.push(new_point);
                 }
-                else if(current.x > 0 && grid[current.y][current.x-1] == opponent)    
+                if(current.x > 0 && grid[current.y][current.x-1] == opponent)    
                 {
                     new_point.x = current.x-1;
                     new_point.y = current.y;
                     queue.push(new_point);
                 }
-                else if(current.x < kGridWidth-1 && grid[current.y][current.x+1] == opponent)    
+                if(current.x < kGridWidth-1 && grid[current.y][current.x+1] == opponent)    
                 {
                     new_point.x = current.x+1;
                     new_point.y = current.y;
@@ -124,6 +155,13 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
             }
 
             ChangeSide();
+
+            if(launch_square.x != -1)
+            {
+                grid[launch_square.y][launch_square.x] = EMPTY;
+            }
+
+            CalculateScore();
             return;
         }
 
@@ -135,9 +173,11 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
             grid[launch_square.y][launch_square.x] = EMPTY;
             previewed_cells.erase(found);
             grid[y][x] = side_to_move;
-            ChangeSide();
-            return;
         }
+
+        CalculateScore();
+        ChangeSide();
+        return;
     }
 
     if(grid[y][x] == EMPTY)
@@ -147,8 +187,8 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
         else
             grid[y][x] = BLACK;
 
+        CalculateScore();
         ChangeSide();
-
     }
     else if(grid[y][x] == side_to_move 
             && x != 0 && y != 0 

@@ -2,7 +2,7 @@
 
 int main()
 {
-    Turrets t(600, 600);
+    Turrets t(512, 512);
     t.Init();
 
     while(!t.ShouldWeQuit())

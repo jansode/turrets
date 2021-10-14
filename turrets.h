@@ -32,7 +32,10 @@ public:
 
     inline int GetOpponent(int side){ return (side == WHITE)?BLACK:WHITE; }
 
+    void DisplayScore();
+    void CalculateScore();
     int NumNeighbours(int x, int y, int side);
+
     void PlayMove(int mouse_x, int mouse_y);
     void ChangeSide();
     void ClearPreview();
@@ -66,4 +69,7 @@ private:
 
     bool quit = false;
     bool preview_active = false;
+
+    int occupied_white = 0;
+    int occupied_black = 0;
 };
