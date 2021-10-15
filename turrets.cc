@@ -49,7 +49,7 @@ void Turrets::ClearPreview()
 
     if(attacked_square.x != -1)
     {
-        grid[attacked_square.y][attacked_square.x] = GetOpponent(side_to_move);
+        grid[attacked_square.y][attacked_square.x] = side_to_move;
     }
 
     previewed_cells.clear();
@@ -99,6 +99,7 @@ void Turrets::ChangeSide()
 
 void Turrets::PlayMove(int mouse_x, int mouse_y)
 {
+
     int x = mouse_x / cell_width;
     int y = mouse_y / cell_height;
 
