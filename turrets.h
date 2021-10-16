@@ -32,6 +32,7 @@ public:
 
     inline int GetOpponent(int side){ return (side == WHITE)?BLACK:WHITE; }
 
+    void PrintGrid();
     void DisplayScore();
     void CalculateScore();
     int NumNeighbours(int x, int y, int side);

@@ -42,16 +42,6 @@ int Turrets::NumNeighbours(int x, int y, int side)
 
 void Turrets::ClearPreview()
 {
-    for(int i = 0; i < previewed_cells.size(); ++i)
-    {
-        grid[previewed_cells[i].y][previewed_cells[i].x] = EMPTY;
-    }
-
-    if(attacked_square.x != -1)
-    {
-        grid[attacked_square.y][attacked_square.x] = side_to_move;
-    }
-
     previewed_cells.clear();
     preview_active = false;
     attacked_square = {-1,-1};
@@ -77,6 +67,25 @@ void Turrets::CalculateScore()
     }
 }
 
+void Turrets::PrintGrid()
+{
+    std::cout<<std::endl;
+    for(int y = 0; y<kGridHeight; ++y)
+    {
+        for(int x = 0; x <kGridWidth; ++x)
+        {
+            switch(grid[y][x])
+            {
+                case EMPTY: std::cout<<"0"; break;
+                case WHITE: std::cout<<"1"; break;
+                case BLACK: std::cout<<"2"; break;
+            }
+        }
+        std::cout<<std::endl;
+    }
+    std::cout<<std::endl;
+}
+
 void Turrets::DisplayScore()
 {
     std::cout<<"==Score==\n";
@@ -99,7 +108,6 @@ void Turrets::ChangeSide()
 
 void Turrets::PlayMove(int mouse_x, int mouse_y)
 {
-
     int x = mouse_x / cell_width;
     int y = mouse_y / cell_height;
 
@@ -162,6 +170,10 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
                 grid[launch_square.y][launch_square.x] = EMPTY;
             }
 
+            #ifdef PRINT_GRID
+            PrintGrid();
+            #endif
+
             CalculateScore();
             return;
         }
@@ -178,6 +190,11 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
 
         CalculateScore();
         ChangeSide();
+
+        #ifdef PRINT_GRID
+        PrintGrid();
+        #endif
+
         return;
     }
 
@@ -197,7 +214,10 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
             && y != kGridHeight - 1)
     {
         if(preview_active) 
+        {
             ClearPreview();
+            return;
+        }
 
         // Check turret move
         if(NumNeighbours(x,y,side_to_move) == 3)
@@ -211,14 +231,12 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
                     if(grid[y-i-1][x] == opponent) 
                     {
                         attacked_square = {x,y-i-1};
-                        grid[y-i-1][x] = ATTACKED_CELL;
                         break;
                     }
                     else if(grid[y-i-1][x] == side_to_move)
                         break;
 
                     previewed_cells.push_back({x,y-i-1});
-                    grid[y-i-1][x] = TURRET_PREVIEW;
 
                     if(y-i-1 == 0) break;
                 }
@@ -234,14 +252,12 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
                     if(grid[y+i+1][x] == opponent) 
                     {
                         attacked_square = {x,y+i+1};
-                        grid[y+i+1][x] = ATTACKED_CELL;
                         break;
                     }
                     else if(grid[y+i+1][x] == side_to_move)
                         break;
 
                     previewed_cells.push_back({x,y+i+1});
-                    grid[y+i+1][x] = TURRET_PREVIEW;
 
                     if(y+i == kGridHeight) break;
                 }
@@ -257,14 +273,12 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
                     if(grid[y][x+i+1] == opponent) 
                     {
                         attacked_square = {x+i+1,y};
-                        grid[y][x+i+1] = ATTACKED_CELL;
                         break;
                     }
                     else if(grid[y][x+i+1] == side_to_move)
                         break;
 
                     previewed_cells.push_back({x+i+1,y});
-                    grid[y][x+i+1] = TURRET_PREVIEW;
 
                     if(x+i == kGridWidth) break;
                 }
@@ -280,14 +294,12 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
                     if(grid[y][x-i-1] == opponent) 
                     {
                         attacked_square = {x-i-1,y};
-                        grid[y][x-i-1] = ATTACKED_CELL;
                         break;
                     }
                     else if(grid[y][x-i-1] == side_to_move)
                         break;
 
                     previewed_cells.push_back({x-i-1,y});
-                    grid[y][x-i-1] = TURRET_PREVIEW;
 
                     if(x-i-1 == 0) break;
                 }
@@ -297,6 +309,10 @@ void Turrets::PlayMove(int mouse_x, int mouse_y)
             }
         }
     }
+
+    #ifdef PRINT_GRID
+    PrintGrid();
+    #endif
 }
 
 void Turrets::Update()
@@ -345,17 +361,29 @@ void Turrets::DrawGrid()
                 case BLACK:
                     SDL_SetRenderDrawColor(renderer,0,0,0,255);
                     break;
-                case TURRET_PREVIEW:
-                    SDL_SetRenderDrawColor(renderer,0,255,0,255);
-                    break;
-                case ATTACKED_CELL:
-                    SDL_SetRenderDrawColor(renderer,255,0,0,255);
-                    break;
             }
 
             SDL_RenderFillRect(renderer, &rect);
         }
     }
+
+    for(int i=0; i<previewed_cells.size(); ++i)
+    {
+        Point p = previewed_cells[i];
+        rect.x = p.x*cell_width;
+        rect.y = p.y*cell_height;
+        SDL_SetRenderDrawColor(renderer,0,255,0,255);
+        SDL_RenderFillRect(renderer, &rect);
+    }
+
+    if(attacked_square.x != -1)
+    {
+        rect.x = attacked_square.x*cell_width;
+        rect.y = attacked_square.y*cell_height;
+        SDL_SetRenderDrawColor(renderer,255,0,0,255);
+        SDL_RenderFillRect(renderer,&rect);
+    }
+
 
     SDL_SetRenderDrawColor(renderer, 0,0,0,255);
 
