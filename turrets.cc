@@ -67,6 +67,48 @@ void Turrets::CalculateScore()
     }
 }
 
+bool Turrets::InBounds(int x, int y)
+{
+    return (x >= 0 && x < kGridWidth && y >= 0 && y < kGridHeight);
+}
+
+bool Turrets::IsStarShape(int x, int y, int color)
+{
+    return InBounds(x-1,y) && grid[y][x-1] == color && 
+           InBounds(x+1,y) && grid[y][x+1] == color &&
+           InBounds(x,y+1) && grid[y+1][x] == color &&
+           InBounds(x,y-1) && grid[y-1][x] == color &&
+           grid[y+1][x+1] == EMPTY && 
+           grid[y-1][x-1] == EMPTY &&
+           grid[y+1][x-1] == EMPTY &&
+           grid[y-1][x+1] == EMPTY;
+}
+
+void Turrets::FindStarShapes()
+{
+    for(int y=0; y<kGridHeight; ++y)
+    {
+        for(int x=0; x<kGridWidth; ++x)
+        {
+            switch(grid[y][x])
+            {
+                case WHITE:
+
+                    if(IsStarShape(x,y, WHITE))
+                        star_shapes_white.insert(y*kGridWidth+x);
+
+                    break;
+                case BLACK:
+
+                    if(IsStarShape(x,y, BLACK))
+                        star_shapes_black.insert(y*kGridWidth+x);
+
+                    break;
+            }
+        }
+    }
+}
+
 void Turrets::PrintGrid()
 {
     std::cout<<std::endl;
@@ -91,14 +133,46 @@ void Turrets::DisplayScore()
     std::cout<<"==Score==\n";
     std::cout<<"White: "<<occupied_white<<"\n";
     std::cout<<"Black: "<<occupied_black<<"\n\n";
+
+    std::cout<<"==Additional moves==\n";
+    if(side_to_move == WHITE)
+        std::cout<<star_shapes_white.size()-used_additional_moves<<std::endl;
+    else
+        std::cout<<star_shapes_black.size()-used_additional_moves<<std::endl;
 }
 
 void Turrets::ChangeSide()
 {
+    FindStarShapes(); 
+
     if(side_to_move == WHITE)
+    {
+        std::cout<<"Star shapes size: "<<star_shapes_white.size()<<std::endl;
+        if(star_shapes_white.size()-used_additional_moves > 0)
+        {
+            std::cout<<"White star shape"<<std::endl;
+            used_additional_moves++;
+            return;
+        }
+
         side_to_move = BLACK;
+    }
     else
+    {
+        if(star_shapes_black.size()-used_additional_moves > 0)
+        {
+            std::cout<<"Black star shape"<<std::endl;
+            used_additional_moves++;
+            return;
+        }
+
         side_to_move = WHITE;
+    }
+
+    used_additional_moves = 0;
+
+    star_shapes_black.clear();
+    star_shapes_white.clear();
 
     if(preview_active) 
         ClearPreview();

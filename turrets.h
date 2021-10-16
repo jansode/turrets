@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <vector>
+#include <unordered_set>
 
 struct Point
 {
@@ -35,7 +36,12 @@ public:
     void PrintGrid();
     void DisplayScore();
     void CalculateScore();
+
+    bool InBounds(int x, int y);
     int NumNeighbours(int x, int y, int side);
+
+    bool IsStarShape(int x, int y, int color);
+    void FindStarShapes();
 
     void PlayMove(int mouse_x, int mouse_y);
     void ChangeSide();
@@ -64,6 +70,9 @@ private:
 
     int side_to_move = WHITE;
 
+    std::unordered_set<int> star_shapes_black;
+    std::unordered_set<int> star_shapes_white;
+
     std::vector<Point> previewed_cells;
     Point attacked_square = {-1,-1};
     Point launch_square = {-1,-1};
@@ -73,4 +82,6 @@ private:
 
     int occupied_white = 0;
     int occupied_black = 0;
+
+    int used_additional_moves = 0;
 };
